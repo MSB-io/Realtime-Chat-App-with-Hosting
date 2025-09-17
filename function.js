@@ -11,6 +11,9 @@ export function getMsg() {
           
 
           pTag.innerText = `message : ${changes.doc.data().message}`;
+          editButton.innerText = "Edit";
+          deleteButton.innerText = "Delete";
+
           
           let chatContainer = document.getElementById("chat");
           chatContainer.appendChild(pTag);
