@@ -6,10 +6,17 @@ export function getMsg() {
       changes.docChanges().forEach((changes) => {
         if (changes.type == "added") {
           let pTag = document.createElement("p");
-          pTag.innerText = `message : ${changes.doc.data().message}`;
+          let editButton = document.createElement("button");
+          let deleteButton = document.createElement("button");
+          
 
+          pTag.innerText = `message : ${changes.doc.data().message}`;
+          
           let chatContainer = document.getElementById("chat");
           chatContainer.appendChild(pTag);
+          chatContainer.appendChild(editButton);
+          chatContainer.appendChild(deleteButton);
+
         }
       });
     });
