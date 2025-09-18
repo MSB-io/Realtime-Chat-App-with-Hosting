@@ -27,8 +27,8 @@
         </button>
         <br><br>
         <!-- Media upload UI -->
-    <input type="file" id="mediaInput" accept="image/*,video/*" style="display:none;">
-    <button id="upload-media">Upload Media</button>
+        <input type="file" id="mediaInput" accept="image/*,video/*" style="display:none;">
+        <button id="upload-media">Upload Media</button>
         <div id="chat"></div>
     </div>
     <script src="./delete.js"></script>
@@ -98,24 +98,7 @@
                 alert('Error uploading media: ' + e);
             }
         });
-        // async function sendMsg(message){
-        //     try{
-        //         console.log('inside the sendMsg function')
-        //         let result = await firebase.firestore().collection('jh-Chat').add({message});
 
-        //         if(result.exists){
-        //             console.log(`Message sent! ${result.data().message}`)
-        //         }
-
-        //     }catch(e){
-        //         console.log(`error while sending message! ${e}`)
-        //     }
-
-
-        // }
-
-
-        // //get function will capture picture of our collection once
         getMsg();
 
 
