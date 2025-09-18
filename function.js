@@ -1,89 +1,79 @@
 export function getMsg() {
+  const chatContainer = document.getElementById("chat");
+
   firebase
     .firestore()
     .collection("jh-Chat")
-    .onSnapshot((changes) => {
-      changes.docChanges().forEach((changes) => {
-        if (changes.type == "added") {
+    .orderBy("timestamp", "asc") // It's good practice to order messages
+    .onSnapshot((snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        const doc = change.doc;
+        const messageData = doc.data();
 
-          let pTag = document.createElement("p");
-          let mediaElem = null;
-          let editButton = document.createElement("button");
-          let deleteButton = document.createElement("button");
+        if (change.type === "added") {
+          const messageContainer = document.createElement("div");
+          messageContainer.id = `message-${doc.id}`;
+          messageContainer.classList.add("message-container");
 
-          // Show text message if present
-          if (changes.doc.data().message) {
-            pTag.innerText = `message : ${changes.doc.data().message}`;
-          } else {
-            pTag.innerText = '';
+          let content = '';
+          if (messageData.message) {
+            content += `<p class="message-text">message : ${messageData.message}</p>`;
           }
 
-          // Show media if present
-          if (changes.doc.data().mediaUrl) {
-            const type = changes.doc.data().mediaType;
+          if (messageData.mediaUrl) {
+            const type = messageData.mediaType;
             if (type === 'image') {
-              mediaElem = document.createElement('img');
-              mediaElem.src = changes.doc.data().mediaUrl;
-              mediaElem.style.maxWidth = '200px';
-              mediaElem.style.display = 'block';
+              content += `<img src="${messageData.mediaUrl}" style="max-width: 200px; display: block;">`;
             } else if (type === 'video') {
-              mediaElem = document.createElement('video');
-              mediaElem.src = changes.doc.data().mediaUrl;
-              mediaElem.controls = true;
-              mediaElem.style.maxWidth = '200px';
-              mediaElem.style.display = 'block';
+              content += `<video src="${messageData.mediaUrl}" controls style="max-width: 200px; display: block;"></video>`;
             } else {
-              mediaElem = document.createElement('a');
-              mediaElem.href = changes.doc.data().mediaUrl;
-              mediaElem.innerText = 'Download File';
-              mediaElem.target = '_blank';
+              content += `<a href="${messageData.mediaUrl}" target="_blank">Download File</a>`;
             }
           }
 
+          messageContainer.innerHTML = content;
+
+          const editButton = document.createElement("button");
           editButton.innerText = "Edit";
-          deleteButton.innerText = "Delete";
-
-          // Add event listener for delete
-          deleteButton.addEventListener("click", async () => {
-            const docId = changes.doc.id;
-            try {
-              await firebase
-                .firestore()
-                .collection("jh-Chat")
-                .doc(docId)
-                .delete();
-              pTag.remove();
-              editButton.remove();
-              deleteButton.remove();
-            } catch (e) {
-              alert("Error deleting message: " + e);
-            }
-          });
-
-          // Add event listener for edit
           editButton.addEventListener("click", async () => {
-            const docId = changes.doc.id;
-            const currentMsg = changes.doc.data().message;
+            const currentMsg = doc.data().message || '';
             const newMsg = prompt("Edit your message:", currentMsg);
             if (newMsg !== null && newMsg.trim() !== "") {
               try {
-                await firebase
-                  .firestore()
-                  .collection("jh-Chat")
-                  .doc(docId)
-                  .update({ message: newMsg });
-                pTag.innerText = `message : ${newMsg}`;
+                await firebase.firestore().collection("jh-Chat").doc(doc.id).update({ message: newMsg });
               } catch (e) {
                 alert("Error updating message: " + e);
               }
             }
           });
 
-          let chatContainer = document.getElementById("chat");
-          if (pTag.innerText) chatContainer.appendChild(pTag);
-          if (mediaElem) chatContainer.appendChild(mediaElem);
-          chatContainer.appendChild(editButton);
-          chatContainer.appendChild(deleteButton);
+          const deleteButton = document.createElement("button");
+          deleteButton.innerText = "Delete";
+          deleteButton.addEventListener("click", async () => {
+            try {
+              await firebase.firestore().collection("jh-Chat").doc(doc.id).delete();
+            } catch (e) {
+              alert("Error deleting message: " + e);
+            }
+          });
+
+          messageContainer.appendChild(editButton);
+          messageContainer.appendChild(deleteButton);
+          chatContainer.appendChild(messageContainer);
+
+        } else if (change.type === "modified") {
+          const messageContainer = document.getElementById(`message-${doc.id}`);
+          if (messageContainer) {
+            const pTag = messageContainer.querySelector('.message-text');
+            if (pTag && messageData.message) {
+              pTag.innerText = `message : ${messageData.message}`;
+            }
+          }
+        } else if (change.type === "removed") {
+          const messageContainer = document.getElementById(`message-${doc.id}`);
+          if (messageContainer) {
+            messageContainer.remove();
+          }
         }
       });
     });

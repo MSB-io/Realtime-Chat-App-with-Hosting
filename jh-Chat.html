@@ -54,10 +54,13 @@
 
             try {
                 console.log('inside the sendMsg function')
-                let result = await firebase.firestore().collection('jh-Chat').add({ message });
+                let result = await firebase.firestore().collection('jh-Chat').add({
+                    message: message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-                if (result.exists) {
-                    console.log(`Message sent! ${result.data().message}`)
+                if (result.id) {
+                    console.log(`Message sent with ID: ${result.id}`)
                 }
 
             } catch (e) {
@@ -85,8 +88,11 @@
             try {
                 const url = await uploadMedia(file);
                 let type = file.type.startsWith('image') ? 'image' : (file.type.startsWith('video') ? 'video' : 'file');
-                await firebase.firestore().collection('jh-Chat').add({ mediaUrl: url, mediaType: type });
-                alert('Media uploaded!');
+                await firebase.firestore().collection('jh-Chat').add({
+                    mediaUrl: url,
+                    mediaType: type,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
                 mediaInput.value = '';
             } catch (e) {
                 alert('Error uploading media: ' + e);
