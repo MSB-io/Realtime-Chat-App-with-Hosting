@@ -5,11 +5,41 @@ export function getMsg() {
     .onSnapshot((changes) => {
       changes.docChanges().forEach((changes) => {
         if (changes.type == "added") {
+
           let pTag = document.createElement("p");
+          let mediaElem = null;
           let editButton = document.createElement("button");
           let deleteButton = document.createElement("button");
 
-          pTag.innerText = `message : ${changes.doc.data().message}`;
+          // Show text message if present
+          if (changes.doc.data().message) {
+            pTag.innerText = `message : ${changes.doc.data().message}`;
+          } else {
+            pTag.innerText = '';
+          }
+
+          // Show media if present
+          if (changes.doc.data().mediaUrl) {
+            const type = changes.doc.data().mediaType;
+            if (type === 'image') {
+              mediaElem = document.createElement('img');
+              mediaElem.src = changes.doc.data().mediaUrl;
+              mediaElem.style.maxWidth = '200px';
+              mediaElem.style.display = 'block';
+            } else if (type === 'video') {
+              mediaElem = document.createElement('video');
+              mediaElem.src = changes.doc.data().mediaUrl;
+              mediaElem.controls = true;
+              mediaElem.style.maxWidth = '200px';
+              mediaElem.style.display = 'block';
+            } else {
+              mediaElem = document.createElement('a');
+              mediaElem.href = changes.doc.data().mediaUrl;
+              mediaElem.innerText = 'Download File';
+              mediaElem.target = '_blank';
+            }
+          }
+
           editButton.innerText = "Edit";
           deleteButton.innerText = "Delete";
 
@@ -17,7 +47,11 @@ export function getMsg() {
           deleteButton.addEventListener("click", async () => {
             const docId = changes.doc.id;
             try {
-              await firebase.firestore().collection("jh-Chat").doc(docId).delete();
+              await firebase
+                .firestore()
+                .collection("jh-Chat")
+                .doc(docId)
+                .delete();
               pTag.remove();
               editButton.remove();
               deleteButton.remove();
@@ -33,7 +67,11 @@ export function getMsg() {
             const newMsg = prompt("Edit your message:", currentMsg);
             if (newMsg !== null && newMsg.trim() !== "") {
               try {
-                await firebase.firestore().collection("jh-Chat").doc(docId).update({ message: newMsg });
+                await firebase
+                  .firestore()
+                  .collection("jh-Chat")
+                  .doc(docId)
+                  .update({ message: newMsg });
                 pTag.innerText = `message : ${newMsg}`;
               } catch (e) {
                 alert("Error updating message: " + e);
@@ -42,10 +80,10 @@ export function getMsg() {
           });
 
           let chatContainer = document.getElementById("chat");
-          chatContainer.appendChild(pTag);
+          if (pTag.innerText) chatContainer.appendChild(pTag);
+          if (mediaElem) chatContainer.appendChild(mediaElem);
           chatContainer.appendChild(editButton);
           chatContainer.appendChild(deleteButton);
-
         }
       });
     });
